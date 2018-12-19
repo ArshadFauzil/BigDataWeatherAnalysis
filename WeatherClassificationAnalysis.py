@@ -3,11 +3,11 @@ from pyspark.sql.functions import mean as _mean, col, count
 from pyspark.ml.feature import StringIndexer, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import LogisticRegression, RandomForestClassifier
-from pyspark.mllib.classification import LogisticRegressionWithLBFGS
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 import pandas as pd
 import matplotlib.pyplot as plt
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.mllib.evaluation import MulticlassMetrics
 
 spark = SparkSession.builder.appName('ml-bank').getOrCreate()
 df = spark.read.csv('DelhiWeather.csv', header = True, inferSchema = True)
@@ -72,37 +72,43 @@ lr = LogisticRegression(maxIter=20, regParam=0.3, elasticNetParam=0)
 rf = RandomForestClassifier(labelCol="label", \
                             featuresCol="features", \
                             numTrees = 100, \
-                            maxDepth = 4, \
+                            maxDepth = 10, \
                             maxBins = 32)
 
-# paramGrid = (ParamGridBuilder()
-#              .addGrid(lr.regParam, [0.1, 0.3, 0.5]) # regularization parameter
-#              .addGrid(lr.elasticNetParam, [0.0, 0.1, 0.2]) # Elastic Net Parameter (Ridge = 0)
-# #            .addGrid(model.maxIter, [10, 20, 50]) #Number of iterations
-# #            .addGrid(idf.numFeatures, [10, 100, 1000]) # Number of features
-#              .build())
-#
+#CROSS - VALIDATION
+paramGrid = (ParamGridBuilder()
+             .addGrid(lr.regParam, [0.1, 0.3, 0.5]) # regularization parameter
+             .addGrid(lr.elasticNetParam, [0.0, 0.1, 0.2]) # Elastic Net Parameter (Ridge = 0)
+#            .addGrid(model.maxIter, [10, 20, 50]) #Number of iterations
+#            .addGrid(idf.numFeatures, [10, 100, 1000]) # Number of features
+             .build())
+
 evaluator = MulticlassClassificationEvaluator(predictionCol="prediction")
-#
-# # Create 7-fold CrossValidator
-# cv = CrossValidator(estimator=lr, \
-#                     estimatorParamMaps=paramGrid, \
-#                     evaluator=evaluator, \
-#                     numFolds=7)
+
+# Create 7-fold CrossValidator
+cv = CrossValidator(estimator=lr, \
+                    estimatorParamMaps=paramGrid, \
+                    evaluator=evaluator, \
+                    numFolds=5)
 
 # lrModel = lr.fit(train)
-# cvModel = cv.fit(train)
+cvModel = cv.fit(train)
 # rfModel = rf.fit(train)
-model = LogisticRegressionWithLBFGS.train(train, numClasses=3)
 
 # predictions = lrModel.transform(test)
-# predictions = cvModel.transform(test)
+predictions = cvModel.transform(test)
 # predictions = rfModel.transform(test)
-predictionAndLabels = test.map(lambda lp: (float(model.predict(lp.features)), lp.label))
 
-# predictions.filter(predictions['prediction'] == 0) \
-#     .select("label", "prediction") \
-#     .orderBy("probability", ascending=False) \
-#     .show(n = 10, truncate = 30)
+results = predictions.select(['prediction', 'label'])
+predictionAndLabels = results.rdd
+
+metrics = MulticlassMetrics(predictionAndLabels)
+
+cm = metrics.confusionMatrix().toArray()
+accuracy = (cm[0][0]+cm[1][1])/cm.sum()
+precision = (cm[0][0])/(cm[0][0]+cm[1][0])
+recall = (cm[0][0])/(cm[0][0]+cm[0][1])
+f1score = 2*((precision*recall)/(precision+recall))
 
 # print(evaluator.evaluate(predictions))
+print("RandomForestClassifier: accuracy, precision, recall, f1score", accuracy, precision, recall, f1score)

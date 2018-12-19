@@ -1,0 +1,5 @@
+ACCURACIES
+LogisticRegression - 0.4 OR <	
+LogisticRegression with cross vaidation (folds = 5) - 0.46
+LogisticRegression with cross vaidation (folds = 7) - 0.47
+Random Forest with maximum depth of trees = 10 - 0.67

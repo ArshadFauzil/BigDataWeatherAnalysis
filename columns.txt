@@ -1,0 +1,6 @@
+0 - date
+2 - dewpoint
+6 - humidity
+8 - pressure
+11 - temperature
+

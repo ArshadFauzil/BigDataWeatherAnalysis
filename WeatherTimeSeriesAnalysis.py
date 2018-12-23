@@ -61,6 +61,7 @@ y = df['_tempm'].resample('MS').mean().ffill()                # change argument 
 # print(df.loc['1996-11-08 02:00:00 '])
 # print(y.isnull().sum().sum())
 
+# Finding the optimal parameter(p,d,q) combination by finding the minimum AIC value
 # p = d = q = range(0, 2)
 # pdq = list(itertools.product(p, d, q))
 # seasonal_pdq = [(x[0], x[1], x[2], 12) for x in pdq]
@@ -101,19 +102,19 @@ y = df['_tempm'].resample('MS').mean().ffill()                # change argument 
 #             continue
 
 # Parameter Config for daily predictions
+# mod = sm.tsa.statespace.SARIMAX(y,
+#                                 order=(1, 1, 1),
+#                                 seasonal_order=(0, 0, 1, 12),
+#                                 enforce_stationarity=False,
+#                                 enforce_invertibility=False)
+
+# Parameter Config for monthly/weekly predictions
 mod = sm.tsa.statespace.SARIMAX(y,
-                                order=(1, 1, 1),
-                                seasonal_order=(0, 0, 1, 12),
+                                order=(1, 0, 1),
+                                seasonal_order=(0, 1, 1, 12),
                                 enforce_stationarity=False,
                                 enforce_invertibility=False)
 
-# Parameter Config for monthly predictions
-# mod = sm.tsa.statespace.SARIMAX(y,
-#                                 order=(1, 0, 1),
-#                                 seasonal_order=(0, 1, 1, 12),
-#                                 enforce_stationarity=False,
-#                                 enforce_invertibility=False)
-#
 results = mod.fit()
 
 # print(results.summary().tables[1])
@@ -121,42 +122,45 @@ results = mod.fit()
 # results.plot_diagnostics(figsize=(16, 8))
 # plt.show()
 
-pred = results.get_prediction(start=pd.to_datetime('2017-01-01'), dynamic=False)
-pred_ci = pred.conf_int()
-
-ax = y['2016':].plot(label='observed')
-pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.7, figsize=(14, 7))
-
-ax.fill_between(pred_ci.index,
-                pred_ci.iloc[:, 0],
-                pred_ci.iloc[:, 1], color='k', alpha=.2)
-
-ax.set_xlabel('Date')
-ax.set_ylabel('Temperature')
-plt.legend()
-
-plt.show()
-
-y_forecasted = pred.predicted_mean
-y_truth = y['2017-01-01':]
-
-mse = ((y_forecasted - y_truth) ** 2).mean()
-print('The Mean Squared Error of our forecasts is {}'.format(round(mse, 2)))
-
-print('The Root Mean Squared Error of our forecasts is {}'.format(round(np.sqrt(mse), 2)))
-
-# pred_uc = results.get_forecast(steps=100)
-# pred_ci = pred_uc.conf_int()
+# predictions of the model for 2017 against the actual values
+# pred = results.get_prediction(start=pd.to_datetime('2016-01-01'), dynamic=False)
+# pred_ci = pred.conf_int()
 #
-# ax = y['2014':].plot(label='observed', figsize=(14, 7))
-# pred_uc.predicted_mean.plot(ax=ax, label='Forecast')
+# ax = y['2014':].plot(label='observed')
+# pred.predicted_mean.plot(ax=ax, label='One-step ahead Forecast', alpha=.7, figsize=(14, 7))
+#
 # ax.fill_between(pred_ci.index,
 #                 pred_ci.iloc[:, 0],
-#                 pred_ci.iloc[:, 1], color='k', alpha=.25)
+#                 pred_ci.iloc[:, 1], color='k', alpha=.2)
 #
 # ax.set_xlabel('Date')
 # ax.set_ylabel('Temperature')
-#
 # plt.legend()
+#
 # plt.show()
+#
+# y_forecasted = pred.predicted_mean
+# y_truth = y['2016-01-01':]
+#
+# mse = ((y_forecasted - y_truth) ** 2).mean()
+# print('The Mean Squared Error of our forecasts is {}'.format(round(mse, 2)))
+#
+# print('The Root Mean Squared Error of our forecasts is {}'.format(round(np.sqrt(mse), 2)))
+
+
+# Forecast for the future period after April 2017
+pred_uc = results.get_forecast(steps=30)
+pred_ci = pred_uc.conf_int()
+
+ax = y['2014':].plot(label='observed', figsize=(14, 7))
+pred_uc.predicted_mean.plot(ax=ax, label='Forecast')
+ax.fill_between(pred_ci.index,
+                pred_ci.iloc[:, 0],
+                pred_ci.iloc[:, 1], color='k', alpha=.25)
+
+ax.set_xlabel('Date')
+ax.set_ylabel('Temperature')
+
+plt.legend()
+plt.show()
 

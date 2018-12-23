@@ -1,0 +1,2 @@
+The Mean Squared Error of our forecasts is 5.88
+The Root Mean Squared Error of our forecasts is 2.42

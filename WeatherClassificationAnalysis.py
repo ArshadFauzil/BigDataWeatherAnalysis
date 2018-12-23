@@ -60,7 +60,7 @@ pipelineModel = pipeline.fit(df)
 df = pipelineModel.transform(df)
 selectedCols = ['label', 'features'] + cols
 df = df.select(selectedCols)
-# df.printSchema()
+df.printSchema()
 #
 # print(pd.DataFrame(df.take(22), columns=df.columns).transpose())
 
@@ -76,27 +76,27 @@ rf = RandomForestClassifier(labelCol="label", \
                             maxBins = 32)
 
 #CROSS - VALIDATION
-paramGrid = (ParamGridBuilder()
-             .addGrid(lr.regParam, [0.1, 0.3, 0.5]) # regularization parameter
-             .addGrid(lr.elasticNetParam, [0.0, 0.1, 0.2]) # Elastic Net Parameter (Ridge = 0)
-#            .addGrid(model.maxIter, [10, 20, 50]) #Number of iterations
-#            .addGrid(idf.numFeatures, [10, 100, 1000]) # Number of features
-             .build())
+# paramGrid = (ParamGridBuilder()
+#              .addGrid(lr.regParam, [0.1, 0.3, 0.5]) # regularization parameter
+#              .addGrid(lr.elasticNetParam, [0.0, 0.1, 0.2]) # Elastic Net Parameter (Ridge = 0)
+# #            .addGrid(model.maxIter, [10, 20, 50]) #Number of iterations
+# #            .addGrid(idf.numFeatures, [10, 100, 1000]) # Number of features
+#              .build())
+#
+# evaluator = MulticlassClassificationEvaluator(predictionCol="prediction")
+#
+# # Create 7-fold CrossValidator
+# cv = CrossValidator(estimator=lr, \
+#                     estimatorParamMaps=paramGrid, \
+#                     evaluator=evaluator, \
+#                     numFolds=5)
 
-evaluator = MulticlassClassificationEvaluator(predictionCol="prediction")
-
-# Create 7-fold CrossValidator
-cv = CrossValidator(estimator=lr, \
-                    estimatorParamMaps=paramGrid, \
-                    evaluator=evaluator, \
-                    numFolds=5)
-
-# lrModel = lr.fit(train)
-cvModel = cv.fit(train)
+lrModel = lr.fit(train)
+# cvModel = cv.fit(train)
 # rfModel = rf.fit(train)
 
-# predictions = lrModel.transform(test)
-predictions = cvModel.transform(test)
+predictions = lrModel.transform(test)
+# predictions = cvModel.transform(test)
 # predictions = rfModel.transform(test)
 
 results = predictions.select(['prediction', 'label'])
@@ -111,4 +111,4 @@ recall = (cm[0][0])/(cm[0][0]+cm[0][1])
 f1score = 2*((precision*recall)/(precision+recall))
 
 # print(evaluator.evaluate(predictions))
-print("RandomForestClassifier: accuracy, precision, recall, f1score", accuracy, precision, recall, f1score)
+print("Classifier: accuracy, precision, recall, f1score", accuracy, precision, recall, f1score)

@@ -1,12 +1,14 @@
 from datetime import datetime
 
-datetime_object1 = datetime.strptime('20100629-03:23', '%Y%m%d-%H:%M')
-datetime_object2 = datetime.strptime('20100729-03:23', '%Y%m%d-%H:%M')
+print(None == ' ')
 
-if(datetime_object1 >= datetime_object2):
-    print(True)
-else:
-    print(False)
+# datetime_object1 = datetime.strptime('20100629-03:23', '%Y%m%d-%H:%M')
+# datetime_object2 = datetime.strptime('20100729-03:23', '%Y%m%d-%H:%M')
+#
+# if(datetime_object1 >= datetime_object2):
+#     print(True)
+# else:
+#     print(False)
 
 # sqlContext = SQLContext(sc)
 
@@ -30,6 +32,9 @@ else:
 
 # axs = pd.scatter_matrix(numeric_data, figsize=(8, 8))
 #
+
+# type = type(Any Variable)
+
 # n = len(numeric_data.columns)
 # for i in range(n):
 #     v = axs[i, 0]
